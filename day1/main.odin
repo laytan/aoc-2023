@@ -16,22 +16,22 @@ main :: proc() {
 }
 
 part_1 :: proc() -> int {
-	digit :: proc(v: byte) -> i8 {
-		if v >= '0' && v <= '9' {
-			return i8(v) - '0'
+	digit :: #force_inline proc(v: byte) -> u8 {
+		switch v {
+		case '1'..='9': return v - '0'
+		case:           return 0
 		}
-		return -1
 	}
 
 	input: string = #load("input.txt")
 	sum: int
 	for line in strings.split_lines_iterator(&input) {
-		left, right: i8 = -1, -1
+		left, right: u8
 		for i in 0..<len(line) {
 			d := digit(line[i])
-			if d == -1 do continue
+			if d == 0 do continue
 
-			if left == -1 {
+			if left == 0 {
 				left = d
 			}
 
@@ -45,37 +45,32 @@ part_1 :: proc() -> int {
 }
 
 part_2 :: proc() -> int {
-	// PERF: If it really matters a Trie datastructure would make sense.
-	digit :: proc(l: string, i: int) -> i8 {
+	digit :: #force_inline proc(l: string, i: int) -> u8 {
 		pre :: strings.has_prefix
-		sl := l[i:]
-		switch {
-		case l[i] >= '0' && l[i] <= '9': return i8(l[i] - '0')
-		case pre(sl, "one"):             return 1
-		case pre(sl, "two"):             return 2
-		case pre(sl, "three"):           return 3
-		case pre(sl, "four"):            return 4
-		case pre(sl, "five"):            return 5
-		case pre(sl, "six"):             return 6
-		case pre(sl, "seven"):           return 7
-		case pre(sl, "eight"):           return 8
-		case pre(sl, "nine"):            return 9
-		case:                            return -1
+		v, rest := l[i], l[i+1:]
+		switch v {
+		case '1'..='9': return v - '0'
+		case 'o':      	return 1 if pre(rest, "ne")   else 0
+		case 't':       return 2 if pre(rest, "wo")   else 3 if pre(rest, "hree") else 0
+		case 'f':       return 4 if pre(rest, "our")  else 5 if pre(rest, "ive")  else 0
+		case 's':       return 6 if pre(rest, "ix")   else 7 if pre(rest, "even") else 0
+		case 'e':       return 8 if pre(rest, "ight") else 0
+		case 'n':       return 9 if pre(rest, "ine")  else 0
+		case:           return 0
 		}
 	}
 
 	input: string = #load("input.txt")
 	sum: int
 	for line in strings.split_lines_iterator(&input) {
-		left, right: i8 = -1, -1
+		left, right: u8
 		for i in 0..<len(line) {
 			d := digit(line, i)
-			if d == -1 do continue
+			if d == 0 do continue
 
-			if left == -1 {
+			if left == 0 {
 				left = d
 			}
-
 			right = d
 		}
 

@@ -2,7 +2,6 @@ package aoc
 
 import "core:fmt"
 import "core:runtime"
-
 import "core:time"
 
 run :: proc(name: string, fn: proc() -> $T) {

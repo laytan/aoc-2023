@@ -16,7 +16,7 @@ tasks:
   bin:
     internal: true
     cmds:
-      - mkdir bin
+      - mkdir -p bin
     status:
       - test -d bin
 
@@ -26,7 +26,7 @@ tasks:
     vars:
       IN: "{{.DIR}}"
       OUT: "{{.DIR}}{{if .DEBUG}}_dbg{{end}}"
-      EXTRA: "{{if .DEBUG}}-debug -use-separate-modules{{else}}-o:aggressive -vet -strict-style{{end}}"
+      EXTRA: "{{if .DEBUG}}-debug -use-separate-modules{{else}}-o:aggressive -no-bounds-check -disable-assert -vet -strict-style{{end}}"
     cmds:
       - odin build {{.IN}} -out:bin/{{.OUT}} {{.EXTRA}}
     sources:
