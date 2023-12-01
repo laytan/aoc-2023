@@ -1,0 +1,6 @@
+
+  "NEW_DAY_DAY":
+    cmds:
+      - task: build
+        vars: { DIR: "dayNEW_DAY_DAY" }
+      - ./bin/dayNEW_DAY_DAY{{if .DEBUG}}_dbg{{end}} {{.CLI_ARGS}}

@@ -1,0 +1,59 @@
+# Each day has its own task, which is just its number.
+# Add `-- 1` or `-- 2` to run a specific part.
+# Set the `DEBUG=true` environment variable to use debug builds.
+# Add `--watch` to watch for changes and rebuild.
+#
+# Use `task new_day -- 2` to generate the boilerplate for day 2 as an example.
+
+version: '3'
+
+env:
+  DEBUG: "{{.DEBUG}}"
+
+interval: 500ms
+
+tasks:
+  bin:
+    internal: true
+    cmds:
+      - mkdir bin
+    status:
+      - test -d bin
+
+  build:
+    internal: true
+    deps: [bin]
+    vars:
+      IN: "{{.DIR}}"
+      OUT: "{{.DIR}}{{if .DEBUG}}_dbg{{end}}"
+      EXTRA: "{{if .DEBUG}}-debug -use-separate-modules{{else}}-o:aggressive -vet -strict-style{{end}}"
+    cmds:
+      - odin build {{.IN}} -out:bin/{{.OUT}} {{.EXTRA}}
+    sources:
+      - "{{.IN}}/**/*"
+      - aoc.odin
+    generates:
+      - "bin/{{.OUT}}"
+
+  new_day:
+    desc: Generate new day boilerplate, use `-- 2` for day 2 for example.
+    vars:
+      DAY: "{{.CLI_ARGS}}"
+      DIR: "day{{.DAY}}"
+    preconditions:
+      - test ! -d {{.DIR}}
+    cmds:
+      - mkdir {{.DIR}}
+      - touch {{.DIR}}/input.txt
+      - cp main.tmpl {{.DIR}}/main.odin
+      - cp day.tmpl day.tmpl.tmp
+      - sed -i '' 's/NEW_DAY_DAY/{{.DAY}}/g' {{.DIR}}/main.odin
+      - sed -i '' 's/NEW_DAY_DAY/{{.DAY}}/g' day.tmpl.tmp
+      - cat day.tmpl.tmp >> Taskfile.yml
+      - rm day.tmpl.tmp
+
+  "1":
+    cmds:
+      - task: build
+        vars: { DIR: "day1" }
+      - ./bin/day1{{if .DEBUG}}_dbg{{end}} {{.CLI_ARGS}}

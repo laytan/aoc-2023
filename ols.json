@@ -1,0 +1,5 @@
+{
+    "checker_args": "-vet -strict-style",
+    "enable_fake_methods": true,
+    "enable_document_symbols": true
+}
