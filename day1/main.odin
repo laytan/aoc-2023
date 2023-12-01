@@ -27,15 +27,16 @@ part_1 :: proc() -> int {
 	sum: int
 	for line in strings.split_lines_iterator(&input) {
 		left, right: u8
-		for i in 0..<len(line) {
-			d := digit(line[i])
-			if d == 0 do continue
-
+		left_idx, right_idx := 0, len(line)-1
+		for left == 0 || right == 0 {
 			if left == 0 {
-				left = d
+				left = digit(line[left_idx])
+				left_idx += 1
 			}
-
-			right = d
+			if right == 0 {
+				right = digit(line[right_idx])
+				right_idx -= 1
+			}
 		}
 
 		sum += int(left) * 10 + int(right)
@@ -44,12 +45,12 @@ part_1 :: proc() -> int {
 	return sum
 }
 
-part_2 :: proc() -> int {
-	digit :: #force_inline proc(l: string, i: int) -> u8 {
+part_2 :: proc() -> uint {
+	digit :: #force_inline proc(l: string, i: int) -> uint {
 		pre :: strings.has_prefix
 		v, rest := l[i], l[i+1:]
 		switch v {
-		case '1'..='9': return v - '0'
+		case '1'..='9': return uint(v - '0')
 		case 'o':      	return 1 if pre(rest, "ne")   else 0
 		case 't':       return 2 if pre(rest, "wo")   else 3 if pre(rest, "hree") else 0
 		case 'f':       return 4 if pre(rest, "our")  else 5 if pre(rest, "ive")  else 0
@@ -61,20 +62,22 @@ part_2 :: proc() -> int {
 	}
 
 	input: string = #load("input.txt")
-	sum: int
+	sum: uint
 	for line in strings.split_lines_iterator(&input) {
-		left, right: u8
-		for i in 0..<len(line) {
-			d := digit(line, i)
-			if d == 0 do continue
-
+		left, right: uint
+		left_idx, right_idx := 0, len(line)-1
+		for left == 0 || right == 0 {
 			if left == 0 {
-				left = d
+				left = digit(line, left_idx)
+				left_idx += 1
 			}
-			right = d
+			if right == 0 {
+				right = digit(line, right_idx)
+				right_idx -= 1
+			}
 		}
 
-		sum += int(left) * 10 + int(right)
+		sum += left * 10 + right
 	}
 	
 	return sum

@@ -15,8 +15,7 @@ interval: 500ms
 tasks:
   bin:
     internal: true
-    cmds:
-      - mkdir -p bin
+    cmd: mkdir -p bin
     status:
       - test -d bin
 
@@ -26,14 +25,17 @@ tasks:
     vars:
       IN: "{{.DIR}}"
       OUT: "{{.DIR}}{{if .DEBUG}}_dbg{{end}}"
-      EXTRA: "{{if .DEBUG}}-debug -use-separate-modules{{else}}-o:aggressive -no-bounds-check -disable-assert -vet -strict-style{{end}}"
-    cmds:
-      - odin build {{.IN}} -out:bin/{{.OUT}} {{.EXTRA}}
+      EXTRA_DBG: "-debug -use-separate-modules"
+      EXTRA_OPT: "-o:aggressive -no-bounds-check -disable-assert -vet -strict-style"
+      EXTRA: "{{if .DEBUG}}{{.EXTRA_DBG}}{{else}}{{.EXTRA_OPT}}{{end}}"
+    cmd: odin build {{.IN}} -out:bin/{{.OUT}} {{.EXTRA}}
     sources:
       - "{{.IN}}/**/*"
       - aoc.odin
     generates:
       - "bin/{{.OUT}}"
+
+  clean: rm -rf bin
 
   new_day:
     desc: Generate new day boilerplate, use `-- 2` for day 2 for example.
