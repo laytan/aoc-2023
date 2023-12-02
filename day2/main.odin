@@ -55,8 +55,7 @@ part_1 :: proc() -> (sum: uint) {
 		color:     Color
 		color_idx: uint
 		colors:    [17]u8
-		outcomes_loop: for i := 0; i < len(line); i += 1 {
-			c := line[i]
+		outcomes_loop: for c in line {
 			switch c {
 			case ':':
 				game_id = uint(num)
@@ -103,8 +102,7 @@ part_2 :: proc() -> (sum: uint) {
 		color:     Color
 		color_idx: uint
 		colors:    [17]u8
-		outcomes_loop: for i := 0; i < len(line); i += 1 {
-			c := line[i]
+		outcomes_loop: for c in line {
 			switch c {
 			case ':':
 				color, color_idx, num = 0, 0, 0
