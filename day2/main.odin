@@ -25,7 +25,7 @@ color_store :: #force_inline proc(b: byte) -> u8 {
 }
 
 part_1 :: proc() -> (sum: uint) {
-    input := #load("input.txt")
+	input := #load("input.txt")
 	maxes := Colors{12, 13, 14}
 
 	game_id: uint
@@ -91,7 +91,7 @@ part_1 :: proc() -> (sum: uint) {
 }
 
 part_2 :: proc() -> (sum: uint) {
-    input := #load("input.txt")
+	input := #load("input.txt")
 
 	num:    u8
 	color:  byte
