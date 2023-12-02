@@ -25,63 +25,66 @@ color_store :: #force_inline proc(b: byte) -> u8 {
 }
 
 part_1 :: proc() -> (sum: uint) {
-	maxes := Colors{12, 13, 14}
     input := #load("input.txt")
-	for line in bytes.split_after_iterator(&input, {'\n'}) {
-		game_id: uint
-		num:     u8
-		color:   byte
-		colors:  Colors
+	maxes := Colors{12, 13, 14}
+
+	game_id: uint
+	num:     u8
+	color:   byte
+	colors:  Colors
 		
-		outcomes := line[5:]
-		outcomes_loop: for i := 0; i < len(outcomes); i += 1 {
-			c := outcomes[i]
-			switch c {
-			case 'r':
-				color = c
-				i += 2
+	for i := 5; i < len(input); {
+		c := input[i]
+		switch c {
+		case 'r':
+			color = c
+			i += 3
 
-			case 'g':
-				color = c
-				i += 4
+		case 'g':
+			color = c
+			i += 5
 
-			case 'b':
-				color = c
-				i += 3
+		case 'b':
+			color = c
+			i += 4
 
-			case '0'..='9':
-				num = num * 10 + (c - '0')
+		case '0'..='9':
+			num = num * 10 + (c - '0')
+			i += 1
 
-			case ' ': // no-op
+		case ',', ';', '\n':
+			store := color_store(color)
+			colors[store] += num
 
-			case ',':
-				store := color_store(color)
-				colors[store] += num
-
-				if colors[store] > maxes[store] do break outcomes_loop
-
-				num = 0
-
-			case ';', '\n':
-				store := color_store(color)
-				colors[store] += num
-
-				if colors[store] > maxes[store] do break outcomes_loop
-
-				if c == '\n' {
-					sum += game_id
-					break outcomes_loop
-				}
-
-				colors, num = 0, 0
-
-			case ':':
-				game_id = uint(num)
-				num = 0
-
-			case:
-				unreachable()
+			if colors[store] > maxes[store] {
+				// Find next game starting point.
+				i = bytes.index_byte(input[i:], '\n') + i + 6
+				num, colors = 0, 0
+				break
 			}
+
+			switch c {
+			case '\n':
+				sum += game_id
+				i += 4
+				fallthrough
+			case ';':
+				colors = 0
+			}
+
+			num = 0
+			i += 2
+
+		case ':':
+			game_id = uint(num)
+			num = 0
+			i += 2
+
+		case ' ':
+			i += 1
+
+		case:
+			unreachable()
 		}
 	}
     return
@@ -89,46 +92,55 @@ part_1 :: proc() -> (sum: uint) {
 
 part_2 :: proc() -> (sum: uint) {
     input := #load("input.txt")
-	for line in bytes.split_after_iterator(&input, {'\n'}) {
-		num:    u8
-		color:  byte
-		colors: Colors
 
-		outcomes := line[7:]
-		outcomes_loop: for i := 0; i < len(outcomes); i += 1 {
-			c := outcomes[i]
-			switch c {
-			case 'r':
-				color = c
-				i += 2
+	num:    u8
+	color:  byte
+	colors: Colors
+		
+	for i := 6; i < len(input); {
+		c := input[i]
+		switch c {
+		case 'r':
+			color = c
+			i += 3
 
-			case 'g':
-				color = c
-				i += 4
+		case 'g':
+			color = c
+			i += 5
 
-			case 'b':
-				color = c
-				i += 3
+		case 'b':
+			color = c
+			i += 4
 
-			case '0'..='9':
-				num = num * 10 + (c - '0')
+		case '0'..='9':
+			num = num * 10 + (c - '0')
+			i += 1
 
-			case ' ': // no-op
+		case ',', ';':
+			store := color_store(color)
+			colors[store] = max(colors[store], num)
+			num = 0
+			i += 2
 
-			case ',', ';', '\n':
-				store := color_store(color)
-				colors[store] = max(colors[store], num)
-				num = 0
+		case '\n':
+			store := color_store(color)
+			colors[store] = max(colors[store], num)
 
-			case ':':
-				num = 0
+			sum += uint(colors.r) * uint(colors.g) * uint(colors.b)
 
-			case:
-				unreachable()
-			}
+			i += 7
+			colors, num = 0, 0
+
+		case ':':
+			num = 0
+			i += 2
+
+		case ' ':
+			i += 1
+
+		case:
+			unreachable()
 		}
-
-		sum += uint(colors.r) * uint(colors.g) * uint(colors.b)
 	}
     return
 }
