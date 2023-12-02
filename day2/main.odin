@@ -43,10 +43,6 @@ part_1 :: proc() -> (sum: uint) {
 
 	// 'r' is 98 and b is 114 so we can subtract 98 and store in an array of 17.
 	maxes := [17]u8{('r' - 98) = MAX_RED, ('g' - 98) = MAX_GREEN, ('b' - 98) = MAX_BLUE}
-	color_store :: #force_inline proc(color: Color) -> u8 {
-		assert(color[0] == 'r' || color[0] == 'g' || color[0] == 'b')
-		return color[0] - 98
-	}
 
     input := #load("input.txt")
 	for line in bytes.split_after_iterator(&input, {'\n'}) {
@@ -122,7 +118,7 @@ part_2 :: proc() -> (sum: uint) {
 				color_idx += 1
 			}
 		}
-		sum += uint(colors['r' - 98]) * uint(colors['g' - 98]) * uint(colors['b' - 98])
+		sum += uint(colors[color_store('r')]) * uint(colors[color_store('g')]) * uint(colors[color_store('b')])
 	}
     return
 }
