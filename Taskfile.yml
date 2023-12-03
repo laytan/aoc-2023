@@ -7,9 +7,6 @@
 
 version: '3'
 
-env:
-  DEBUG: "{{.DEBUG}}"
-
 interval: 500ms
 
 tasks:
@@ -26,7 +23,7 @@ tasks:
       IN: "{{.DIR}}"
       OUT: "{{.DIR}}{{if .DEBUG}}_dbg{{end}}"
       EXTRA_DBG: "-debug -use-separate-modules"
-      EXTRA_OPT: "-o:aggressive -no-bounds-check -disable-assert -vet -strict-style"
+      EXTRA_OPT: "-o:aggressive -no-bounds-check -disable-assert -vet -vet-style -vet-semicolon -strict-style"
       EXTRA: "{{if .DEBUG}}{{.EXTRA_DBG}}{{else}}{{.EXTRA_OPT}}{{end}}"
     cmd: odin build {{.IN}} -out:bin/{{.OUT}} {{.EXTRA}}
     sources:
@@ -47,6 +44,7 @@ tasks:
     cmds:
       - mkdir {{.DIR}}
       - touch {{.DIR}}/input.txt
+      # - 'wget https://adventofcode.com/2023/day/{{.DAY}}/input --header="Cookie: session={{.SESSION}}" -O {{.DIR}}/input.txt'
       - cp main.tmpl {{.DIR}}/main.odin
       - cp day.tmpl day.tmpl.tmp
       - sed -i '' 's/NEW_DAY_DAY/{{.DAY}}/g' {{.DIR}}/main.odin
@@ -65,3 +63,9 @@ tasks:
       - task: build
         vars: { DIR: "day2" }
       - ./bin/day2{{if .DEBUG}}_dbg{{end}} {{.CLI_ARGS}}
+
+  "3":
+    cmds:
+      - task: build
+        vars: { DIR: "day3" }
+      - ./bin/day3{{if .DEBUG}}_dbg{{end}} {{.CLI_ARGS}}

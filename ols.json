@@ -1,5 +1,5 @@
 {
-    "checker_args": "-vet -strict-style",
+    "checker_args": "-o:aggressive -no-bounds-check -disable-assert -vet -vet-style -vet-semicolon -strict-style",
     "enable_fake_methods": true,
     "enable_document_symbols": true
 }

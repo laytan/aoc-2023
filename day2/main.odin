@@ -2,6 +2,8 @@ package main
 
 import "core:bytes"
 import "core:os"
+import "core:strings"
+import "core:strconv"
 
 import aoc ".."
 
@@ -12,6 +14,10 @@ main :: proc() {
 
 	if len(os.args) < 2 || os.args[1] == "2" {
 		aoc.run("Day 2, Part 2", part_2)
+	}
+
+	if len(os.args) < 2 || os.args[1] == "2_extra" {
+		aoc.run("Day 2, Part 2 Short but Sweet", part_2_short_but_sweet)
 	}
 }
 
@@ -32,7 +38,7 @@ part_1 :: proc() -> (sum: uint) {
 	num:     u8
 	color:   byte
 	colors:  Colors
-		
+
 	for i := 5; i < len(input); {
 		c := input[i]
 		switch c {
@@ -90,13 +96,40 @@ part_1 :: proc() -> (sum: uint) {
     return
 }
 
+// Easy to write version, using the Odin core packages a lot.
+// Still 0 allocations but there is more iteration logic.
+part_2_short_but_sweet :: proc() -> (sum: int) {
+	s :: strings
+
+	input := #load("input.txt", string)
+	for line in s.split_lines_iterator(&input) {
+		maxes: [3]int
+		game := line[s.index_byte(line, ':')+2:]
+		for roll in s.split_iterator(&game, "; ") {
+			roll := roll
+			for dice in s.split_iterator(&roll, ", ") {
+				_num, _, color := s.partition(dice, " ")
+				num := strconv.atoi(_num)
+
+				mi := color[0] % 3
+				maxes[mi] = max(num, maxes[mi])
+			}
+		}
+
+		sum += maxes.r * maxes.g * maxes.b
+	}
+	return
+}
+
+// This version does everything in one pass, even skipping a majority of the input by manually
+// controlling the `i` variable.
 part_2 :: proc() -> (sum: uint) {
 	input := #load("input.txt")
 
 	num:    u8
 	color:  byte
 	colors: Colors
-		
+
 	for i := 6; i < len(input); {
 		c := input[i]
 		switch c {
