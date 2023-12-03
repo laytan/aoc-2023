@@ -137,132 +137,51 @@ part_2 :: proc() -> (sum: int) {
 		return
 	}
 
-	gear_ratio :: proc(m: []byte, gear: vec2) -> (res: int) {
+	gear_ratio :: proc(m: []byte, gear: vec2) -> (res: int, ok: bool) {
 		found: int
+		res = 1
 
-		{ // To the left.
-			pos := gear
-			pos.x -= 1
-			if ratio, ok := check_number(m, pos); ok {
-				found += 1
-				switch found {
-				case 1: res  = ratio
-				case 2: res *= ratio
-				case:   return 0
+		check :: #force_inline proc(m: []byte, pos: vec2, found: ^int, res: ^int) -> (n_found: bool, ok: bool) {
+			ok = true
+			ratio: int
+			if ratio, n_found = check_number(m, pos); n_found {
+				found^ += 1
+				if found^ == 3 {
+					ok = false
+					return
 				}
+				res^ *= ratio
 			}
+			return
 		}
 
-		{ // To the right.
-			pos := gear
-			pos.x += 1
-			if ratio, ok := check_number(m, pos); ok {
-				found += 1
-				switch found {
-				case 1: res  = ratio
-				case 2: res *= ratio
-				case:   return 0
-				}
-			}
-		}
-
-		has_above: bool; { // Above.
-			pos := gear
-			pos.y -= 1
-			if ratio, ok := check_number(m, pos); ok {
-				has_above = true
-				found += 1
-				switch found {
-				case 1: res  = ratio
-				case 2: res *= ratio
-				case:   return 0
-				}
-			}
-		}
-
-		has_below: bool; { // Below.
-			pos := gear
-			pos.y += 1
-			if ratio, ok := check_number(m, pos); ok {
-				has_below = true
-				found += 1
-				switch found {
-				case 1: res  = ratio
-				case 2: res *= ratio
-				case:   return 0
-				}
-			}
-		}
+		check(m, {gear.x-1, gear.y}, &found, &res) or_return
+		check(m, {gear.x+1, gear.y}, &found, &res) or_return
+		has_above := check(m, {gear.x, gear.y-1}, &found, &res) or_return
+		has_below := check(m, {gear.x, gear.y+1}, &found, &res) or_return
 
 		// If there is a number on top of the gear, it would have taken any numbers besides it and
 		// this would be duplicating results.
 		if !has_above {
-			{ // Top left.
-				pos := gear
-				pos -= 1
-				if ratio, ok := check_number(m, pos); ok {
-					found += 1
-					switch found {
-					case 1: res  = ratio
-					case 2: res *= ratio
-					case:   return 0
-					}
-				}
-			}
-
-			{ // Top right.
-				pos := gear
-				pos.y -= 1
-				pos.x += 1
-				if ratio, ok := check_number(m, pos); ok {
-					found += 1
-					switch found {
-					case 1: res  = ratio
-					case 2: res *= ratio
-					case:   return 0
-					}
-				}
-			}
+			check(m, {gear.x-1, gear.y-1}, &found, &res) or_return
+			check(m, {gear.x+1, gear.y-1}, &found, &res) or_return
 		}
 
 		// If there is a number below the gear, it would have taken any numbers besides it and
 		// this would be duplicating results.
 		if !has_below {
-			{ // Bottom left.
-				pos := gear
-				pos.y += 1
-				pos.x -= 1
-				if ratio, ok := check_number(m, pos); ok {
-					found += 1
-					switch found {
-					case 1: res  = ratio
-					case 2: res *= ratio
-					case:   return 0
-					}
-				}
-			}
-
-			{ // Bottom right.
-				pos := gear
-				pos += 1
-				if ratio, ok := check_number(m, pos); ok {
-					found += 1
-					switch found {
-					case 1: res  = ratio
-					case 2: res *= ratio
-					case:   return 0
-					}
-				}
-			}
+			check(m, {gear.x-1, gear.y+1}, &found, &res) or_return
+			check(m, {gear.x+1, gear.y+1}, &found, &res) or_return
 		}
 
-		return res if found == 2 else 0
+		if found == 2 do ok = true
+		return
 	}
 
 	for c, i in input {
 		switch c {
 		case '*':
-			sum += gear_ratio(input, coords(input, i))
+			sum += gear_ratio(input, coords(input, i)) or_break
 		}
 	}
 
