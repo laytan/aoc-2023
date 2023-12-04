@@ -18,115 +18,115 @@ main :: proc() {
 }
 
 part_1 :: proc() -> (sum: int) {
-    input := #load("input.txt")
+	input := #load("input.txt")
 
 	set := ba.create(99)
-    defer ba.destroy(set)
+	defer ba.destroy(set)
 
 	for line in bytes.split_after_iterator(&input, {'\n'}) {
 		defer ba.clear(set)
 
-        checking: bool
-        num: int
-        score: int
-        for c in line {
-            switch c {
-            case '0'..='9':
-                num = num * 10 + int(c - '0')
+		checking: bool
+		num: int
+		score: int
+		for c in line {
+			switch c {
+			case '0'..='9':
+				num = num * 10 + int(c - '0')
 
-            case ':':
-                num = 0
+			case ':':
+				num = 0
 
-            case ' ', '\n':
-                if num == 0 do break
-                defer num = 0
-                assert(num < 100)
-                
-                // Add to winning numbers.
-                if !checking {
-                    ba.unsafe_set(set, num)
-                    break
-                }
+			case ' ', '\n':
+				if num == 0 do break
+				defer num = 0
+				assert(num < 100)
 
-                // Check if in winning numbers.
-                if ba.unsafe_get(set, num) {
-                    if score == 0 {
-                        score = 1
-                        break
-                    }
+				// Add to winning numbers.
+				if !checking {
+					ba.unsafe_set(set, num)
+					break
+				}
 
-                    score *= 2
-                }
+				// Check if in winning numbers.
+				if ba.unsafe_get(set, num) {
+					if score == 0 {
+						score = 1
+						break
+					}
 
-            case '|':
-                checking = true
-            }
-        }
+					score *= 2
+				}
 
-        sum += score
+			case '|':
+				checking = true
+			}
+		}
+
+		sum += score
 	}
 
-    return
+	return
 }
 
 part_2 :: proc() -> (sum: int) {
-    input := #load("input.txt")
+	input := #load("input.txt")
 
 	set := ba.create(99)
-    defer ba.destroy(set)
+	defer ba.destroy(set)
 
-    lines: [dynamic]u8
-    defer delete(lines)
+	lines := make([dynamic]u8, 0, 256)
+	defer delete(lines)
 
 	for line in bytes.split_after_iterator(&input, {'\n'}) {
 		defer ba.clear(set)
 
-        checking: bool
-        num: int
-        won: u8
-        for c in line {
-            switch c {
-            case '0'..='9':
-                num = num * 10 + int(c - '0')
+		checking: bool
+		num: int
+		won: u8
+		for c in line {
+			switch c {
+			case '0'..='9':
+				num = num * 10 + int(c - '0')
 
-            case ':':
-                num = 0
+			case ':':
+				num = 0
 
-            case ' ', '\n':
-                if num == 0 do break
-                defer num = 0
-                assert(num < 100)
-                
-                if !checking {
-                    ba.unsafe_set(set, num)
-                    break
-                }
+			case ' ', '\n':
+				if num == 0 do break
+				defer num = 0
+				assert(num < 100)
 
-                if ba.unsafe_get(set, num) {
-                    won += 1
-                }
+				if !checking {
+					ba.unsafe_set(set, num)
+					break
+				}
 
-            case '|':
-                checking = true
-            }
-        }
+				if ba.unsafe_get(set, num) {
+					won += 1
+				}
 
-        append(&lines, won)
-    }
+			case '|':
+				checking = true
+			}
+		}
 
-    queue: [dynamic]u32
-    defer delete(queue)
+		append(&lines, won)
+	}
 
-    for _, i in lines {
-        append(&queue, u32(i))
-        for {
-            card := pop_safe(&queue) or_break
-            won  := u32(lines[card])
-            sum  += 1
-            for copy in card+1..<card+1+won {
-                append(&queue, copy)
-            }
-        }
-    }
-    return
+	queue: [dynamic]u32
+	defer delete(queue)
+
+	for _, i in lines {
+		append(&queue, u32(i))
+		for {
+			card := pop_safe(&queue) or_break
+			won  := u32(lines[card])
+			sum  += 1
+			for copy in card+1..<card+1+won {
+				append(&queue, copy)
+			}
+		}
+	}
+	return
 }
