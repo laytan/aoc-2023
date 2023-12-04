@@ -50,12 +50,7 @@ part_1 :: proc() -> (sum: int) {
 
 				// Check if in winning numbers.
 				if ba.unsafe_get(set, num) {
-					if score == 0 {
-						score = 1
-						break
-					}
-
-					score *= 2
+					score = max(1, score*2)
 				}
 
 			case '|':
