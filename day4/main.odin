@@ -69,22 +69,23 @@ part_1 :: proc() -> (sum: int) {
 	return
 }
 
-part_2 :: proc() -> (sum: int) {
+part_2 :: proc() -> (sum: u32) {
 	input := #load("input.txt")
 
 	set := ba.create(99)
 	defer ba.destroy(set)
 
-	lines := make([dynamic]u8, 0, 256)
-	defer delete(lines)
+	cards := make([dynamic]u32, 256)
+	defer delete(cards)
 
-	for line in bytes.split_after_iterator(&input, {'\n'}) {
+	card_idx: int
+	for card in bytes.split_after_iterator(&input, {'\n'}) {
 		defer ba.clear(set)
 
 		checking: bool
 		num: int
 		won: u8
-		for c in line {
+		for c in card {
 			switch c {
 			case '0'..='9':
 				num = num * 10 + int(c - '0')
@@ -111,22 +112,16 @@ part_2 :: proc() -> (sum: int) {
 			}
 		}
 
-		append(&lines, won)
-	}
-
-	queue: [dynamic]u32
-	defer delete(queue)
-
-	for _, i in lines {
-		append(&queue, u32(i))
-		for {
-			card := pop_safe(&queue) or_break
-			won  := u32(lines[card])
-			sum  += 1
-			for copy in card+1..<card+1+won {
-				append(&queue, copy)
-			}
+		cards[card_idx] += 1
+		for i in card_idx+1..<card_idx+1+int(won) {
+			cards[i] += cards[card_idx]
 		}
+		card_idx += 1
 	}
+
+	for num in cards {
+		sum += num
+	}
+
 	return
 }
