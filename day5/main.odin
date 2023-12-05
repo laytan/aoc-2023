@@ -1,8 +1,8 @@
 package main
 
 import "core:os"
-import "core:strings"
 import "core:strconv"
+import "core:strings"
 
 import aoc ".."
 
@@ -20,18 +20,6 @@ Mapping :: struct {
 	dst_start: int,
 	src_start: int,
 	length:    int,
-}
-
-do_mapping :: proc(mappings: []Mapping, v: int) -> int {
-	// PERF: could sort the mappings and do a binary search,
-	// but there don't seem to be that many where it will actually benefit.
-
-	for m in mappings {
-		if v >= m.src_start && v < m.src_start + m.length {
-			return m.dst_start + v - m.src_start
-		}
-	}
-	return v
 }
 
 parse_seeds :: proc(input: string) -> ([]int, string) {
@@ -76,6 +64,18 @@ parse_maps :: proc(input: string) -> (out: [7][]Mapping) {
 part_1 :: proc() -> (lowest: int) {
     input := #load("input.txt", string)
 
+	do_mapping :: proc(mappings: []Mapping, v: int) -> int {
+		// PERF: could sort the mappings and do a binary search,
+		// but there don't seem to be that many where it will actually benefit.
+
+		for m in mappings {
+			if v >= m.src_start && v < m.src_start + m.length {
+				return m.dst_start + v - m.src_start
+			}
+		}
+		return v
+	}
+
 	seeds, maps_input := parse_seeds(input)
 	defer delete(seeds)
 
@@ -96,24 +96,84 @@ part_1 :: proc() -> (lowest: int) {
 part_2 :: proc() -> (lowest: int) {
     input := #load("input.txt", string)
 
-	seeds, maps_input := parse_seeds(input)
+	Seed :: struct {
+		start: int,
+		length: int,
+	}
+
+	raw_seeds, maps_input := parse_seeds(input)
+	defer delete(raw_seeds)
+
+	seeds := make([dynamic]Seed, len(raw_seeds)/2)
 	defer delete(seeds)
+	for i := 0; i < len(raw_seeds); i += 2 {
+		seeds[i / 2] = { raw_seeds[i], raw_seeds[i+1] }
+	}
 
 	maps := parse_maps(maps_input)
 	defer { for m in maps do delete(m) }
 
-	lowest = max(int)
-	for i := 0; i < len(seeds); i += 2 {
-		start_seed := seeds[i]
-		length     := seeds[i+1]
+	do_mapping :: proc(result: ^[dynamic]Seed, mappings: []Mapping, seed: Seed) {
+		seed := seed
+		for m in mappings {
+			seed_end := seed.start  + seed.length
+			map_end  := m.src_start + m.length
 
-		for seed in start_seed..<start_seed+length {
-			result := seed
-			for m in maps {
-				result = do_mapping(m, result)
+			// Check overlaps, if it does, add that part to the results and keep going with the rest.
+			if seed.start < map_end && seed_end > m.src_start {
+				inter_start := max(seed.start, m.src_start)
+				inter_end   := min(seed_end, map_end)
+				offset      := m.dst_start - m.src_start
+				length      := inter_end - inter_start
+
+				// Add mapped part to the result.
+				in_mapping := Seed{ inter_start + offset, length }
+				append(result, in_mapping)
+
+				rem_length := seed.length - length
+
+				// The seed was fully mapped.
+				if rem_length <= 0 {
+					return
+				}
+
+				// Check if remainder is at the beginning or end.
+				// Reassign to seed so we can check other mappings.
+				if inter_start == seed.start {
+					do_mapping(result, mappings, Seed{seed.start + length, rem_length})
+					return
+				} else {
+					// Map the remaining part at the start.
+					start := Seed{seed.start, inter_start - seed.start}
+					do_mapping(result, mappings, start)
+					rem_length -= start.length
+
+					// Map the remaining part at the end.
+					if rem_length > 0 {
+						end := Seed{inter_end, rem_length}
+						do_mapping(result, mappings, end)
+					}
+					return
+				}
 			}
-			lowest = min(lowest, result)
 		}
+
+		// Seed didn't map to any mapping, it stays the same.
+		append(result, seed)
+	}
+
+	lowest = max(int)
+	for m, i in maps {
+		length := len(seeds)
+		for i in 0..<length {
+			seed := seeds[i]
+			do_mapping(&seeds, m, seed)
+		}
+		remove_range(&seeds, 0, length)
+	}
+
+	for seed in seeds {
+		lowest = min(lowest, seed.start)
 	}
     return
 }
