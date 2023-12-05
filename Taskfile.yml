@@ -75,3 +75,9 @@ tasks:
       - task: build
         vars: { DIR: "day4" }
       - ./bin/day4{{if .DEBUG}}_dbg{{end}} {{.CLI_ARGS}}
+
+  "5":
+    cmds:
+      - task: build
+        vars: { DIR: "day5" }
+      - ./bin/day5{{if .DEBUG}}_dbg{{end}} {{.CLI_ARGS}}
