@@ -138,7 +138,6 @@ part_2 :: proc() -> (lowest: int) {
 				}
 
 				// Check if remainder is at the beginning or end.
-				// Reassign to seed so we can check other mappings.
 				if inter_start == seed.start {
 					do_mapping(result, mappings, Seed{seed.start + length, rem_length})
 					return
