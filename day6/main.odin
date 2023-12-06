@@ -18,6 +18,33 @@ main :: proc() {
 	}
 }
 
+// Binary search to the first win and calculate the amount we win.
+ways_to_win :: proc(time: int, distance: int) -> int {
+	half := time / 2 + time % 2
+	size  := half
+	left  := 0
+	right := half
+	for left < right {
+		hold := left + size / 2
+
+		drive_time := time - hold
+		speed      := hold
+		driven     := speed * drive_time
+		is_win     := driven > distance
+
+		if is_win {
+			right = hold
+		} else {
+			left = hold + 1
+		}
+		size = right - left
+	}
+	start_winning := left
+	ways := (half - start_winning) * 2
+	if time % 2 == 0 do ways += 1
+	return ways
+}
+
 part_1 :: proc() -> (multiplied: int) {
 	input := #load("input.txt", string)
 
@@ -38,22 +65,13 @@ part_1 :: proc() -> (multiplied: int) {
 	}
 
 	for time, i in times {
-		// PERF: it is a wave, can only do half and * 2 it.
-		ways_to_win := 0
-		for hold in 0..=time {
-			drive_time := time - hold
-			speed      := hold
-			distance   := speed * drive_time
-			if distance > distances[i] {
-				ways_to_win += 1
-			}
-		}
-		multiplied = max(multiplied, 1) * ways_to_win
+		ways := ways_to_win(time, distances[i])
+		multiplied = max(multiplied, 1) * ways
 	}
 	return
 }
 
-part_2 :: proc() -> (ways_to_win: int) {
+part_2 :: proc() -> int {
 	input := #load("input.txt", string)
 
 	stimes, _, sdistances := strings.partition(input, "\n")
@@ -72,14 +90,5 @@ part_2 :: proc() -> (ways_to_win: int) {
 		}
 	}
 
-	assert(time % 2 == 0)
-	for hold in 0..=time/2 {
-		drive_time := time - hold
-		speed      := hold
-		if speed * drive_time > distance {
-			ways_to_win += 2
-		}
-	}
-
-	return
+	return ways_to_win(time, distance)
 }
