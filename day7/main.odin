@@ -136,7 +136,8 @@ parse_rounds :: proc(input: string, ranker: proc(string) -> Rank) -> []Round {
 // }
 
 cmp_rounds :: proc(a: Round, b: Round) -> slice.Ordering {
-	if a.rank == b.rank {
+	switch {
+	case a.rank == b.rank:
 		for ac, i in a.hand {
 			bc := b.hand[i]
 			ar, br := card_ranks[ac], card_ranks[bc]
@@ -147,10 +148,7 @@ cmp_rounds :: proc(a: Round, b: Round) -> slice.Ordering {
 			}
 		}
 		unreachable()
-		// return .Equal
-	}
 
-	switch {
 	case a.rank > b.rank: return .Greater
 	case:                 return .Less
 	}
