@@ -34,14 +34,14 @@ Card :: struct {
 Cards :: sa.Small_Array(5, Card)
 
 Rank :: enum {
-	Five_Of_A_Kind,
-	Four_Of_A_Kind,
-	Full_House,
-	Three_Of_A_Kind,
-	Two_Pair,
-	One_Pair,
-	High_Card,
 	None,
+	High_Card,
+	One_Pair,
+	Two_Pair,
+	Three_Of_A_Kind,
+	Full_House,
+	Four_Of_A_Kind,
+	Five_Of_A_Kind,
 }
 
 card_ranks: [86]int = {
@@ -151,8 +151,8 @@ cmp_rounds :: proc(a: Round, b: Round) -> slice.Ordering {
 	}
 
 	switch {
-	case a.rank > b.rank: return .Less
-	case:                 return .Greater
+	case a.rank > b.rank: return .Greater
+	case:                 return .Less
 	}
 }
 
@@ -195,7 +195,7 @@ part_2 :: proc() -> (total: int) {
 		r := Rank.None
 		for s in subs {
 			buf[i] = s
-			r = min(r, rank_jokers(string(buf[:])))
+			r = max(r, rank_jokers(string(buf[:])))
 		}
 		return r
 	}
