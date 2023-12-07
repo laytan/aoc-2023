@@ -1,9 +1,9 @@
 package main
 
 import "core:os"
-import "core:strings"
-import "core:strconv"
 import "core:slice"
+import "core:strconv"
+import "core:strings"
 
 import sa "core:container/small_array"
 
@@ -45,23 +45,19 @@ Rank :: enum {
 }
 
 card_ranks: [86]int = {
-	'A' = 1,
-	'K' = 2,
-	'Q' = 3,
-	// 'J' = 4 or 14,
-	'T' = 5,
-	'9' = 6,
+	'A' = 13,
+	'K' = 12,
+	'Q' = 11,
+	// 'J' = 10 (part 1) or 0 (part 2),
+	'T' = 9,
+	'9' = 8,
 	'8' = 7,
-	'7' = 8,
-	'6' = 9,
-	'5' = 10,
-	'4' = 11,
-	'3' = 12,
-	'2' = 13,
-}
-
-subs: [12]byte = {
-	'A', 'K', 'Q', 'T', '9', '8', '7', '6', '5', '4', '3', '2',
+	'7' = 6,
+	'6' = 5,
+	'5' = 4,
+	'4' = 3,
+	'3' = 2,
+	'2' = 1,
 }
 
 rank_card :: proc(cards: Cards) -> (r: Rank) {
@@ -109,9 +105,9 @@ sum_cards :: proc(hand: string) -> (cards: Cards) {
 	return
 }
 
-parse_rounds :: proc(input: string, ranker: proc(string) -> Rank) -> []Round {
+parse_rounds :: proc(input: string, ranker: proc(Cards) -> Rank) -> []Round {
 	input := input
-	rounds: [dynamic]Round
+	rounds := make([dynamic]Round, 0, 1000)
 	for round_str in strings.split_lines_iterator(&input) {
 		hand_str, _, bid_str := strings.partition(round_str, " ")
 		cards := sum_cards(hand_str)
@@ -120,7 +116,7 @@ parse_rounds :: proc(input: string, ranker: proc(string) -> Rank) -> []Round {
 			hand  = hand_str,
 			cards = cards,
 			bid   = bid,
-			rank  = ranker(hand_str),
+			rank  = ranker(cards),
 		})
 	}
 	return rounds[:]
@@ -143,8 +139,8 @@ cmp_rounds :: proc(a: Round, b: Round) -> slice.Ordering {
 			ar, br := card_ranks[ac], card_ranks[bc]
 			switch {
 			case ar == br: continue
-			case ar > br:  return .Less
-			case:          return .Greater
+			case ar > br:  return .Greater
+			case:          return .Less
 			}
 		}
 		unreachable()
@@ -157,11 +153,9 @@ cmp_rounds :: proc(a: Round, b: Round) -> slice.Ordering {
 part_1 :: proc() -> (total: int) {
 	input := #load("input.txt", string)
 
-	card_ranks['J'] = 4
+	card_ranks['J'] = 10
 
-	rounds := parse_rounds(input, proc(hand: string) -> Rank {
-		return rank_card(sum_cards(hand))
-	})
+	rounds := parse_rounds(input, rank_card)
 	defer delete(rounds)
 
 	slice.sort_by_cmp(rounds[:], cmp_rounds)
@@ -178,24 +172,59 @@ part_1 :: proc() -> (total: int) {
 part_2 :: proc() -> (total: int) {
 	input := #load("input.txt", string)
 
-	card_ranks['J'] = 14
+	card_ranks['J'] = 0
 
-	// Just recursively try changing each joker to each card lol.
-	rank_jokers :: proc(hand: string) -> Rank {
-		i := strings.index_byte(hand, 'J')
-		if i == -1 {
-			return rank_card(sum_cards(hand))
+
+	// Original solution:
+	// @static subs: [12]byte = {
+	// 	'A', 'K', 'Q', 'T', '9', '8', '7', '6', '5', '4', '3', '2',
+	// }
+	// // Just recursively try changing each joker to each card lol.
+	// rank_jokers :: proc(hand: string) -> Rank {
+	// 	i := strings.index_byte(hand, 'J')
+	// 	if i == -1 {
+	// 		return rank_card(sum_cards(hand))
+	// 	}
+	//
+	// 	buf: [5]byte
+	// 	copy(buf[:], hand)
+	//
+	// 	r := Rank.None
+	// 	for s in subs {
+	// 		buf[i] = s
+	// 		r = max(r, rank_jokers(string(buf[:])))
+	// 	}
+	// 	return r
+	// }
+
+	// Adding the jokers to the card of the highest value makes it the highest
+	// possible value card.
+	rank_jokers :: proc(cards: Cards) -> Rank {
+		cards := cards
+
+		jokers_idx: int
+		jokers, highest: ^Card
+		for i in 0..<cards.len {
+			card := &cards.data[i]
+			if card.label == 'J' {
+				jokers_idx = i
+				jokers     = card
+			} else if highest == nil || card.num >= highest.num {
+				highest = card
+			}
 		}
 
-		buf: [5]byte
-		copy(buf[:], hand)
-
-		r := Rank.None
-		for s in subs {
-			buf[i] = s
-			r = max(r, rank_jokers(string(buf[:])))
+		if jokers != nil {
+			if highest == nil {
+				// 5 Jokers.
+				cards.data[0].label = 'A'
+			} else {
+				highest.num += jokers.num
+				sa.unordered_remove(&cards, jokers_idx)
+			}
 		}
-		return r
+
+		return rank_card(cards)
 	}
 
 	rounds := parse_rounds(input, rank_jokers)
