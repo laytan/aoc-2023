@@ -4,6 +4,7 @@ import "core:os"
 import "core:slice"
 import "core:strconv"
 import "core:strings"
+import "core:bytes"
 
 import sa "core:container/small_array"
 
@@ -20,7 +21,7 @@ main :: proc() {
 }
 
 Round :: struct {
-	hand:  string,
+	hand:  [5]byte,
 	cards: Cards,
 	rank:  Rank,
 	bid:   int,
@@ -44,7 +45,7 @@ Rank :: enum {
 	Five_Of_A_Kind,
 }
 
-card_ranks: [86]int = {
+card_ranks: [86]u8 = {
 	'A' = 13,
 	'K' = 12,
 	'Q' = 11,
@@ -110,10 +111,17 @@ parse_rounds :: proc(input: string, ranker: proc(Cards) -> Rank) -> []Round {
 	rounds := make([dynamic]Round, 0, 1000)
 	for round_str in strings.split_lines_iterator(&input) {
 		hand_str, _, bid_str := strings.partition(round_str, " ")
+
 		cards := sum_cards(hand_str)
 		bid   := strconv.atoi(bid_str)
+
+		hand: [5]byte
+		for i in 0..<5 {
+			hand[i] = card_ranks[hand_str[i]]
+		}
+
 		append(&rounds, Round{
-			hand  = hand_str,
+			hand  = hand,
 			cards = cards,
 			bid   = bid,
 			rank  = ranker(cards),
@@ -134,16 +142,8 @@ parse_rounds :: proc(input: string, ranker: proc(Cards) -> Rank) -> []Round {
 cmp_rounds :: proc(a: Round, b: Round) -> slice.Ordering {
 	switch {
 	case a.rank == b.rank:
-		for ac, i in a.hand {
-			bc := b.hand[i]
-			ar, br := card_ranks[ac], card_ranks[bc]
-			switch {
-			case ar == br: continue
-			case ar > br:  return .Greater
-			case:          return .Less
-			}
-		}
-		unreachable()
+		a, b := a, b
+		return slice.Ordering(bytes.compare(a.hand[:], b.hand[:]))
 
 	case a.rank > b.rank: return .Greater
 	case:                 return .Less
