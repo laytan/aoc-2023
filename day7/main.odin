@@ -4,7 +4,6 @@ import "core:os"
 import "core:slice"
 import "core:strconv"
 import "core:strings"
-import "core:bytes"
 
 import sa "core:container/small_array"
 
@@ -21,9 +20,7 @@ main :: proc() {
 }
 
 Round :: struct {
-	hand:  [5]byte,
-	cards: Cards,
-	rank:  Rank,
+	score: u64be,
 	bid:   int,
 }
 
@@ -63,39 +60,41 @@ card_ranks: [86]u8 = {
 
 rank_card :: proc(cards: Cards) -> (r: Rank) {
 	switch {
-	case sa.len(cards) == 1: return .Five_Of_A_Kind
-	case sa.len(cards) == 2:
-		a, b := sa.get(cards, 0), sa.get(cards, 1)
+	case cards.len == 1: return .Five_Of_A_Kind
+	case cards.len == 2:
+		a, b := cards.data[0], cards.data[1]
 		switch {
 		case a.num == 4 || b.num == 4: return .Four_Of_A_Kind
 		case a.num == 3 && b.num == 2: return .Full_House
 		case a.num == 2 && b.num == 3: return .Full_House
-		case:                          return .None
+		case:                          unreachable()
 		}
 
-	case sa.len(cards) == 3:
+	case cards.len == 3:
 		has_three: bool
 		pairs: int
 		for i in 0..<3 {
-			card := sa.get(cards, i)
-			if card.num == 3 do has_three = true
-			if card.num == 2 do pairs += 1
+			card := cards.data[i]
+			if card.num == 3 {
+				has_three = true
+			} else if card.num == 2 {
+				pairs += 1
+			}
 		}
 		switch {
 		case has_three && pairs == 0: return .Three_Of_A_Kind
 		case pairs == 2:              return .Two_Pair
-		case:                         return .None
+		case:                         unreachable()
 		}
 
-	case sa.len(cards) == 4: return .One_Pair
-	case:                    return .High_Card
+	case cards.len == 4: return .One_Pair
+	case:                return .High_Card
 	}
 }
 
 sum_cards :: proc(hand: string) -> (cards: Cards) {
 	cards_loop: for c in hand {
-		for i := 0; i < sa.len(cards); i += 1 {
-			card := sa.get_ptr(&cards, i)
+		for &card in cards.data[:] {
 			if card.label == c {
 				card.num += 1
 				continue cards_loop
@@ -115,39 +114,26 @@ parse_rounds :: proc(input: string, ranker: proc(Cards) -> Rank) -> []Round {
 		cards := sum_cards(hand_str)
 		bid   := strconv.atoi(bid_str)
 
-		hand: [5]byte
-		for i in 0..<5 {
-			hand[i] = card_ranks[hand_str[i]]
+		// The buffer we will use to sort, first byte is the rank of the hand
+		// with later bytes the rank of each card. Which is also the criteria
+		// for sorting.
+		// 8 bytes so it fits in a u64 for when we compare.
+		score: [8]byte
+		score[0] = u8(ranker(cards))
+		for i in 1..<6 {
+			score[i] = card_ranks[hand_str[i-1]]
 		}
 
 		append(&rounds, Round{
-			hand  = hand,
-			cards = cards,
+			score = transmute(u64be)score,
 			bid   = bid,
-			rank  = ranker(cards),
 		})
 	}
 	return rounds[:]
 }
 
-// print_round :: proc(round: Round) {
-//	fmt.printf("%v\n", round.rank)
-//	for i := 0; i < sa.len(round.cards); i += 1 {
-//		card := sa.get(round.cards, i)
-//		fmt.printf("%d %c\n", card.num, card.label)
-//	}
-//	fmt.println()
-// }
-
-cmp_rounds :: proc(a: Round, b: Round) -> slice.Ordering {
-	switch {
-	case a.rank == b.rank:
-		a, b := a, b
-		return slice.Ordering(bytes.compare(a.hand[:], b.hand[:]))
-
-	case a.rank > b.rank: return .Greater
-	case:                 return .Less
-	}
+rounds_less :: proc(a: Round, b: Round) -> bool {
+	return a.score < b.score
 }
 
 part_1 :: proc() -> (total: int) {
@@ -158,12 +144,9 @@ part_1 :: proc() -> (total: int) {
 	rounds := parse_rounds(input, rank_card)
 	defer delete(rounds)
 
-	slice.sort_by_cmp(rounds[:], cmp_rounds)
+	slice.sort_by(rounds[:], rounds_less)
 
 	for round, i in rounds {
-		assert(round.rank != .None)
-		// fmt.printf("%d * %d\n", round.bid, i + 1)
-		// print_round(round)
 		total += round.bid * (i+1)
 	}
 	return
@@ -230,12 +213,9 @@ part_2 :: proc() -> (total: int) {
 	rounds := parse_rounds(input, rank_jokers)
 	defer delete(rounds)
 
-	slice.sort_by_cmp(rounds[:], cmp_rounds)
+	slice.sort_by(rounds[:], rounds_less)
 
 	for round, i in rounds {
-		assert(round.rank != .None)
-		// fmt.printf("%d * %d\n", round.bid, i + 1)
-		// print_round(round)
 		total += round.bid * (i+1)
 	}
 	return
