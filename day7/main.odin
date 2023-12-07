@@ -73,7 +73,7 @@ rank_card :: proc(cards: Cards) -> (r: Rank) {
 		case a.num == 4 || b.num == 4: return .Four_Of_A_Kind
 		case a.num == 3 && b.num == 2: return .Full_House
 		case a.num == 2 && b.num == 3: return .Full_House
-		case:						   return .None
+		case:                          return .None
 		}
 
 	case sa.len(cards) == 3:
@@ -86,12 +86,12 @@ rank_card :: proc(cards: Cards) -> (r: Rank) {
 		}
 		switch {
 		case has_three && pairs == 0: return .Three_Of_A_Kind
-		case pairs == 2:			  return .Two_Pair
-		case:						  return .None
+		case pairs == 2:              return .Two_Pair
+		case:                         return .None
 		}
 
 	case sa.len(cards) == 4: return .One_Pair
-	case:					 return .High_Card
+	case:                    return .High_Card
 	}
 }
 
@@ -143,7 +143,7 @@ cmp_rounds :: proc(a: Round, b: Round) -> slice.Ordering {
 			switch {
 			case ar == br: continue
 			case ar > br:  return .Less
-			case:		   return .Greater
+			case:          return .Greater
 			}
 		}
 		unreachable()
@@ -152,7 +152,7 @@ cmp_rounds :: proc(a: Round, b: Round) -> slice.Ordering {
 
 	switch {
 	case a.rank > b.rank: return .Less
-	case:				  return .Greater
+	case:                 return .Greater
 	}
 }
 
