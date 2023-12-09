@@ -21,18 +21,17 @@ Direction :: enum {
 	Back,
 }
 
-solve :: proc(buf: ^[dynamic]int, dir: Direction) -> int {
-	same := true
+same :: proc(buf: [dynamic]int) -> bool {
 	for n in buf[1:] {
 		if n != buf[0] {
-			same = false
-			break
+			return false
 		}
 	}
+	return true
+}
 
-	if same {
-		return buf[0]
-	}
+solve :: proc(buf: ^[dynamic]int, dir: Direction) -> int {
+	if same(buf^) do return buf[0]
 
 	acc := buf[0 if dir == .Front else len(buf)-1]
 
