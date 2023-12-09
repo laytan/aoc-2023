@@ -49,7 +49,7 @@ solve :: proc(buf: ^[dynamic]int, dir: Direction) -> int {
 }
 
 part_1 :: proc() -> (next_sum: int) {
-    input := #load("input.txt", string)
+	input := #load("input.txt", string)
 	buf := make([dynamic]int, 0, 8)
 	for sequence in strings.split_lines_iterator(&input) {
 		sequence := sequence
@@ -59,11 +59,11 @@ part_1 :: proc() -> (next_sum: int) {
 		next_sum += solve(&buf, .Back)
 		clear(&buf)
 	}
-    return
+	return
 }
 
 part_2 :: proc() -> (next_sum: int) {
-    input := #load("input.txt", string)
+	input := #load("input.txt", string)
 	buf := make([dynamic]int, 0, 8)
 	for sequence in strings.split_lines_iterator(&input) {
 		sequence := sequence
